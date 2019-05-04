@@ -1,4 +1,4 @@
-defmodule TodoList do
+defmodule Todo.List do
   defstruct auto_id: 1,
             entries: %{}
 
@@ -32,14 +32,14 @@ defmodule TodoList do
   end
 end
 
-defimpl String.Chars, for: TodoList do
-  def to_string(_), do: "#TodoList"
+defimpl String.Chars, for: Todo.List do
+  def to_string(_), do: "#Todo.List"
 end
 
-defimpl Collectable, for: TodoList do
+defimpl Collectable, for: Todo.List do
   def into(original), do: {original, &cb/2}
 
-  defp cb(tl, {:cont, entry}), do: TodoList.add_entry(tl, entry)
+  defp cb(tl, {:cont, entry}), do: Todo.List.add_entry(tl, entry)
   defp cb(tl, :done), do: tl
   defp cb(_, :halt), do: :ok
 end
