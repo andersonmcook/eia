@@ -1,35 +1,32 @@
 defmodule TodoServer do
-  def start do
-    spawn(fn -> loop(TodoList.new()) end)
+  use GenServer
+
+  # Client
+  def start_link do
+    GenServer.start_link(__MODULE__, TodoList.new(), name: __MODULE__)
   end
 
-  def add_entry(server, entry) do
-    send(server, {:add_entry, entry})
+  def add_entry(%{date: _, title: _} = entry) do
+    GenServer.cast(__MODULE__, {:add_entry, entry})
   end
 
-  def entries(server, date) do
-    send(server, {:entries, self(), date})
-
-    receive do
-      {:todo_entries, entries} -> entries
-      _ -> []
-    after
-      5000 -> {:error, :timeout}
-    end
+  def entries(date) do
+    GenServer.call(__MODULE__, {:entries, date})
   end
 
-  defp loop(state) do
-    receive do
-      {:add_entry, entry} ->
-        TodoList.add_entry(state, entry)
+  # Server
+  @impl GenServer
+  def init(state) do
+    {:ok, state}
+  end
 
-      {:entries, caller, date} ->
-        send(caller, {:todo_entries, TodoList.entries(state, date)})
-        state
+  @impl GenServer
+  def handle_call({:entries, date}, _, state) do
+    {:reply, TodoList.entries(state, date), state}
+  end
 
-      _ ->
-        state
-    end
-    |> loop()
+  @impl GenServer
+  def handle_cast({:add_entry, entry}, state) do
+    {:noreply, TodoList.add_entry(state, entry)}
   end
 end
