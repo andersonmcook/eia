@@ -16,13 +16,13 @@ defmodule Todo.Server do
 
   # Server
   @impl GenServer
-  def init(name) do
-    {:ok, name, {:continue, :init}}
+  def init(state) do
+    {:ok, state, {:continue, :init}}
   end
 
   @impl GenServer
-  def handle_continue(:init, name) do
-    {:noreply, {name, Todo.Database.get(name) || Todo.List.new()}}
+  def handle_continue(:init, state) do
+    {:noreply, {state, Todo.Database.get(state) || Todo.List.new()}}
   end
 
   @impl GenServer

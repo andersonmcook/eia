@@ -3,10 +3,10 @@ defmodule TodoCacheTest do
 
   test "server_process" do
     {:ok, cache} = Todo.Cache.start()
-    bob_pid = Todo.Cache.server_process(cache, "bob")
+    bob = Todo.Cache.server_process(cache, "bob")
 
-    refute bob_pid == Todo.Cache.server_process(cache, "alice")
-    assert bob_pid == Todo.Cache.server_process(cache, "bob")
+    refute bob == Todo.Cache.server_process(cache, "alice")
+    assert bob == Todo.Cache.server_process(cache, "bob")
   end
 
   test "todo operations" do
@@ -16,5 +16,23 @@ defmodule TodoCacheTest do
     entries = Todo.Server.entries(alice, ~D[2019-05-04])
 
     assert [%{date: ~D[2019-05-04], title: "Dentist"}] = entries
+  end
+
+  test "persistence" do
+    {:ok, cache} = Todo.Cache.start()
+
+    john = Todo.Cache.server_process(cache, "john")
+    Todo.Server.add_entry(john, %{date: ~D[2018-12-20], title: "Shopping"})
+    assert 1 == length(Todo.Server.entries(john, ~D[2018-12-20]))
+
+    GenServer.stop(cache)
+    {:ok, cache} = Todo.Cache.start()
+
+    entries =
+      cache
+      |> Todo.Cache.server_process("john")
+      |> Todo.Server.entries(~D[2018-12-20])
+
+    assert [%{date: ~D[2018-12-20], title: "Shopping"}] = entries
   end
 end
