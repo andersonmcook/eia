@@ -14,11 +14,7 @@ defmodule Todo.Cache do
   # Server
   @impl GenServer
   def init(state) do
-    case Todo.Database.start_link(nil) do
-      {:ok, _} -> {:ok, state}
-      {:error, {:already_started, _}} -> {:ok, state}
-      error -> error
-    end
+    {:ok, state}
   end
 
   @impl GenServer

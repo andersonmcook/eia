@@ -1,13 +1,21 @@
 defmodule Todo.Database do
-  use GenServer
-
   @db_folder "./persist"
-  @worker_length 3
+  @pool_size 3
 
-  # Client
-  def start_link(_) do
-    IO.puts("Starting database server.")
-    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
+  def start_link do
+    File.mkdir_p!(@db_folder)
+
+    1..@pool_size
+    |> Enum.map(&Supervisor.child_spec({Todo.DatabaseWorker, {@db_folder, &1}}, id: &1))
+    |> Supervisor.start_link(strategy: :one_for_one)
+  end
+
+  def child_spec(_) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, []},
+      type: :supervisor
+    }
   end
 
   def store(key, data) do
@@ -23,33 +31,6 @@ defmodule Todo.Database do
   end
 
   defp choose_worker(key) do
-    GenServer.call(__MODULE__, {:choose_worker, key})
-  end
-
-  # Server
-  @impl GenServer
-  def init(_) do
-    File.mkdir_p!(@db_folder)
-
-    [@db_folder]
-    |> Stream.cycle()
-    |> Stream.take(@worker_length)
-    |> Stream.with_index()
-    |> Stream.map(fn {folder, index} ->
-      {:ok, pid} = Todo.DatabaseWorker.start_link(folder)
-      {index, pid}
-    end)
-    |> Map.new()
-    |> (&{:ok, &1}).()
-  end
-
-  @impl GenServer
-  def handle_call({:choose_worker, key}, _, state) do
-    worker =
-      key
-      |> :erlang.phash2(@worker_length)
-      |> (&Map.get(state, &1)).()
-
-    {:reply, worker, state}
+    :erlang.phash2(key, @pool_size) + 1
   end
 end
