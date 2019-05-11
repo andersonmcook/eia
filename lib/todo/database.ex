@@ -5,9 +5,9 @@ defmodule Todo.Database do
   @worker_length 3
 
   # Client
-  def start do
+  def start_link(_) do
     IO.puts("Starting database server.")
-    GenServer.start(__MODULE__, nil, name: __MODULE__)
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
   def store(key, data) do
@@ -36,7 +36,7 @@ defmodule Todo.Database do
     |> Stream.take(@worker_length)
     |> Stream.with_index()
     |> Stream.map(fn {folder, index} ->
-      {:ok, pid} = Todo.DatabaseWorker.start(folder)
+      {:ok, pid} = Todo.DatabaseWorker.start_link(folder)
       {index, pid}
     end)
     |> Map.new()
