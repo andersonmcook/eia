@@ -7,6 +7,7 @@ defmodule Todo.DatabaseWorker do
   end
 
   def store(worker_pid, key, data) do
+    IO.puts("Starting database worker.")
     GenServer.cast(worker_pid, {:store, key, data})
   end
 
