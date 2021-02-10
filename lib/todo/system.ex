@@ -10,10 +10,11 @@ defmodule Todo.System do
   def init(_) do
     Supervisor.init(
       [
-        Todo.Metrics,
+        # Todo.Metrics,
         Todo.ProcessRegistry,
         Todo.Cache,
-        Todo.Database
+        Todo.Database,
+        SimpleRegistry
       ],
       strategy: :one_for_one
     )
