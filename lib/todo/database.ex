@@ -14,7 +14,7 @@ defmodule Todo.Database do
         worker_module: Worker,
         size: @pool_size
       ],
-      [@db_folder]
+      db_folder: @db_folder
     )
   end
 
